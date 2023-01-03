@@ -1,0 +1,47 @@
+import requests
+from pprint import pprint
+from WPfuncs import image_url, list_html_list, dict_list, headers, wph2
+api_url = 'https://www.themealdb.com/api/json/v1/1/search.php?f=a'
+r = requests.get(api_url)
+meals = r.json().get('meals')
+
+single_meal = meals[0]
+name = single_meal.get('strMeal')
+area = single_meal.get('strArea')
+category = single_meal.get('strCategory')
+instruction = single_meal.get('strInstructions')
+image = single_meal.get('strMealThumb')
+youtube = single_meal.get('strYoutube')
+
+i = 1
+
+ingredients = {}
+
+while i < 21:
+    key_ingredient = f'strIngredient{i}'
+    key_measurement = f'strMeasure{i}'
+    if (single_meal.get(key_ingredient) != None) and (single_meal.get(key_ingredient) != ''):
+        ingredients[single_meal.get(key_ingredient)] = single_meal.get(key_measurement)
+
+    i += 1
+
+instruction_list = instruction.split('\r\n')
+
+title = f'{name} Step By Step Recipe'
+heading_one = wph2('Ingredients')
+ingredients_html = dict_list(ingredients)
+heading_two = wph2('Description')
+image = image_url({name}, title)
+description = list_html_list(instruction_list)
+
+content = f'{image}{heading_one}{heading_two}{ingredients_html}{heading_two}{description}'
+
+data = {
+    'title' : title,
+    'content' : content,
+}
+
+headers = headers('Abu Riyad', '5Oeo xGgQ bZx1 5Z42 fsy3 X5oY')
+endpoint = 'https://localhost/wp/wp-json/wp/v2/posts'
+r = requests.post(endpoint, data=data, headers=headers, verify=False)
+print(r)
